@@ -1,0 +1,30 @@
+library(magrittr)
+library(tigris)
+library(tidyverse)
+library(tidycensus)
+library(leaflet)
+
+
+median_inc_oh <- get_acs(geography = "tract",
+                         variables = "B19013_001",
+                         state = "OH",
+                         geometry = TRUE)
+                         
+oh <- state_legislative_districts(state = "Ohio", house = "lower",
+                                  cb= TRUE)                         
+                         
+
+mytext <- paste(
+  "County: ", median_inc_oh$NAME,"<br/>", 
+  "Median Income: ", median_inc_oh$estimate,
+  sep="") %>%
+  lapply(htmltools::HTML)
+
+
+leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = oh, stroke = TRUE, color = "black", weight = 1, fillOpacity = 0.01) %>%
+  addPolygons(data = median_inc_oh,stroke = FALSE, fillOpacity = 0.5, smoothFactor = 0.5,
+              color = "white", weight = 1, opacity = 1,
+              fillColor = ~colorNumeric("YlOrRd", estimate)(estimate),
+              label = mytext) 
